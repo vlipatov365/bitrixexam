@@ -2,6 +2,7 @@
 namespace Exam31\Ticket;
 
 use Bitrix\Main\Entity;
+use Bitrix\Main\Entity\Validator\Length;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Localization\Loc;
 
@@ -22,7 +23,16 @@ class SomeElementTable extends Entity\DataManager
 			(new Entity\DatetimeField('DATE_MODIFY'))
 				->configureRequired()
 				->configureDefaultValue(new DateTime()),
-			(new Entity\StringField('TITLE'))
+			(new Entity\StringField(
+                'TITLE',
+                [
+                    'validation' => function() {
+                        return [
+                            new Length(1, 250)
+                        ];
+                    }
+                ]
+            ))
 				->configureRequired(),
 			new Entity\TextField('TEXT'),
 		);

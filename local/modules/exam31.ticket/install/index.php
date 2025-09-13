@@ -9,8 +9,8 @@ use Bitrix\Main\IO\Directory;
 use Bitrix\Main\EventManager;
 use Bitrix\Main\UrlRewriter;
 use Bitrix\Main\SystemException;
-
 use Exam31\Ticket\SomeElementTable;
+use Exam31\Ticket\ORM\SomeElementInfoTable;
 
 Loc::loadMessages(__FILE__);
 
@@ -46,7 +46,7 @@ class exam31_ticket extends CModule
 		$this->filesPath = [
 			'PUBLIC' => '/exam31',
 			'COMPONENTS' => '/local/components/' . $this->MODULE_ID,
-			'ACTIVITIES' => '/local/activities/examticketactivity'
+			'ACTIVITIES' => '/local/activities/examticketactivity',
 		];
 
 	}
@@ -122,12 +122,22 @@ class exam31_ticket extends CModule
 		}
 
 		$dbConnection = Application::getConnection();
-		$entity = SomeElementTable::getEntity();
-		$tableName = SomeElementTable::getTableName();
-		if (!$dbConnection->isTableExists($tableName))
-		{
-			$entity->createDbTable();
-		}
+        $tables = $this->getTables();
+        foreach ($tables as $tableClass => $demoCallable) {
+            $entity = $tableClass::getEntity();
+            $tableName = $tableClass::getTableName();
+            if (!$dbConnection->isTableExists($tableName))
+            {
+                $entity->createDbTable();
+                try {
+                    if (is_callable($demoCallable)) {
+                        $demoCallable();
+                    }
+                } catch (Throwable $e) {
+                    continue;
+                }
+            }
+        }
 
 		return true;
 	}
@@ -141,11 +151,14 @@ class exam31_ticket extends CModule
 		}
 
 		$dbConnection = Application::getConnection();
-		$tableName = SomeElementTable::getTableName();
-		if ($dbConnection->isTableExists($tableName))
-		{
-			$dbConnection->dropTable($tableName);
-		}
+        $tables = $this->getTables();
+        foreach ($tables as $tableClass => $demoCallable) {
+            $tableName = $tableClass::getTableName();
+            if ($dbConnection->isTableExists($tableName))
+            {
+                $dbConnection->dropTable($tableName);
+            }
+        }
 
 		return true;
 	}
@@ -226,5 +239,28 @@ class exam31_ticket extends CModule
 			]
 		);
 	}
+
+    private function getTables(): array
+    {
+        return [
+            SomeElementTable::class => function() {
+                for($i=1; $i <= 100; $i++) {
+                    SomeElementTable::add([
+                        'ACTIVE' => true,
+                        'TITLE' => Loc::getMessage('EXAM31_DEMO_NAME', ['#I#' => $i]),
+                        'TEXT' => Loc::getMessage('EXAM31_DEMO_DESC', ['#I#' => $i]),
+                    ]);
+                }
+            },
+            SomeElementInfoTable::class => function () {
+                for ($i=1; $i <=20; $i++) {
+                    SomeElementInfoTable::add([
+                        'TITLE' => Loc::getMessage('EXAM31_DEMO_INFO', ['#I#' => $i]),
+                        'ELEMENT_ID' => random_int(1, 5)
+                    ]);
+                }
+            },
+        ];
+    }
 }
 
