@@ -1,8 +1,10 @@
 <?php
-namespace Exam31\Ticket;
+namespace Exam31\Ticket\ORM;
 
 use Bitrix\Main\Entity;
 use Bitrix\Main\Entity\Validator\Length;
+use Bitrix\Main\ORM\Fields\Relations\Reference;
+use Bitrix\Main\ORM\Query\Join;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Localization\Loc;
 
@@ -35,6 +37,11 @@ class SomeElementTable extends Entity\DataManager
             ))
 				->configureRequired(),
 			new Entity\TextField('TEXT'),
+            (new Reference(
+                'INFO',
+                SomeElementInfoTable::class,
+                Join::on('this.ID', 'ref.ELEMENT_ID')
+            ))->configureJoinType(Join::TYPE_INNER)
 		);
 	}
 
