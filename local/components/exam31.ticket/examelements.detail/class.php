@@ -1,6 +1,5 @@
 <?php
 use Bitrix\Main\SystemException;
-use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Engine\Contract\Controllerable;
@@ -10,7 +9,7 @@ use Bitrix\Main\Errorable;
 use Bitrix\Main\ErrorCollection;
 use Bitrix\Main\ErrorableImplementation;
 
-use Exam31\Ticket\SomeElementTable;
+use Exam31\Ticket\ORM\SomeElementTable;
 
 class ExamElementsDetailComponent extends CBitrixComponent implements Controllerable, Errorable
 {
@@ -57,10 +56,7 @@ class ExamElementsDetailComponent extends CBitrixComponent implements Controller
 			return;
 		}
 
-		//flat
 		$this->arResult['ELEMENT'] = $this->getEntityData();
-
-		//form
 		$this->arResult['form'] = $this->PrepareForm($this->arResult['ELEMENT']);
 		$this->arResult['LIST_PAGE_URL'] = $this->arParams['LIST_PAGE_URL'];
 		$this->arResult['DETAIL_PAGE_URL'] = $this->arParams['DETAIL_PAGE_URL'];
@@ -98,7 +94,6 @@ class ExamElementsDetailComponent extends CBitrixComponent implements Controller
 	}
 	protected function getEntityConfig(): array
 	{
-		//Демо-данные - конфигурация формы
 		return [
 			[
 				'type' => 'column',
@@ -126,7 +121,6 @@ class ExamElementsDetailComponent extends CBitrixComponent implements Controller
 	{
 		$fieldsLabel = SomeElementTable::getFieldsDisplayLabel();
 
-		//Демо-данные - поля формы
 		return [
 			[
 				'name' => 'ID',
@@ -168,40 +162,35 @@ class ExamElementsDetailComponent extends CBitrixComponent implements Controller
 			return [];
 		}
 
-		//Демо-данные полей для формы
-		$element = [
-			'ID' => 2,
-			'DATE_MODIFY' => (new DateTime())->toString(),
-			'TITLE' => 'TITLE 2',
-			'TEXT' => 'TEXT 2',
-			'ACTIVE' => 'Y'
+        $elementObject = SomeElementTable::getById($this->elementId)->fetchObject();
+
+		return [
+			'ID' => $elementObject->getId(),
+			'DATE_MODIFY' => $elementObject->getDateModify()->toString(),
+			'TITLE' => $elementObject->getTitle(),
+			'TEXT' => $elementObject->getText(),
+			'ACTIVE' => $elementObject->getActive() ? 'Y' : 'N',
 		];
+    }
 
-		return $element;
-	}
-
-	//Ajax
 	public function saveAction(array $data): AjaxJson
 	{
-		//Заглушка для отработки ajax
-		$element = [];
-		$isUdpateSuccess = true;
 		try
 		{
-			if ($isUdpateSuccess)
-			{
-				$element['ID'] = '1';
-			}
-			else
-			{
-				throw new SystemException(Loc::getMessage('EXAM31_ELEMENT_DETAIL_UPDATE_ERROR'));
-			}
+            $tableFields = array_map(fn($field) => $field->getName(), SomeElementTable::getEntity()->getScalarFields());
+            $data = array_intersect_key($data, $tableFields);
+            if (isset($data['ACTIVE'])) {
+                $data['ACTIVE'] = $data['ACTIVE'] === 'Y';
+            }
+            $result = SomeElementTable::update($this->elementId, $data);
 
-			return AjaxJson::createSuccess([
-				'ENTITY_ID' => $element['ID'],
-				//REDIRECT_URL необходим для корректной работы формы в слайдере
-				//'REDIRECT_URL' => $this->getDetailPageUrl($element['ID']),
-			]);
+            if (!$result->isSuccess()) {
+                throw new SystemException(implode('; ', $result->getErrorMessages()));
+            }
+
+
+
+			return AjaxJson::createSuccess($this->getEntityData());
 		}
 		catch (SystemException $exception)
 		{

@@ -12,7 +12,7 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 
 $APPLICATION->IncludeComponent(
 	'exam31.ticket:examelements.detail',
-	'flat',
+	'form',
 	[
 		'ELEMENT_ID' => $arResult['VARIABLES']['ELEMENT_ID'] ?? null,
 		'DETAIL_PAGE_URL' => $arResult['DETAIL_PAGE_URL'],

@@ -8,7 +8,7 @@ use Bitrix\Main\Entity\Validator\Length;
 use Bitrix\Main\ORM\Data\DataManager;
 use Bitrix\Main\ORM\Fields\IntegerField;
 use Bitrix\Main\ORM\Fields\Relations\Reference;
-use Exam31\Ticket\SomeElementTable;
+use Exam31\Ticket\ORM\SomeElementTable;
 
 /**
  * class SomeElementInfo

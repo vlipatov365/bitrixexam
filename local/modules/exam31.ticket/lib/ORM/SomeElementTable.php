@@ -3,6 +3,7 @@ namespace Exam31\Ticket\ORM;
 
 use Bitrix\Main\Entity;
 use Bitrix\Main\Entity\Validator\Length;
+use Bitrix\Main\ORM\Fields\Relations\OneToMany;
 use Bitrix\Main\ORM\Fields\Relations\Reference;
 use Bitrix\Main\ORM\Query\Join;
 use Bitrix\Main\Type\DateTime;
@@ -37,11 +38,11 @@ class SomeElementTable extends Entity\DataManager
             ))
 				->configureRequired(),
 			new Entity\TextField('TEXT'),
-            (new Reference(
+            (new OneToMany(
                 'INFO',
                 SomeElementInfoTable::class,
-                Join::on('this.ID', 'ref.ELEMENT_ID')
-            ))->configureJoinType(Join::TYPE_INNER)
+                'ELEMENT'
+            ))->configureJoinType(Join::TYPE_LEFT)
 		);
 	}
 
